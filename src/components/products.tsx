@@ -6,7 +6,7 @@ import { type Product, type Store } from "@/db/schema"
 import type { Option } from "@/types"
 
 import { getSubcategories, sortOptions } from "@/config/products"
-import { cn, toTitleCase } from "@/lib/utils"
+import { cn, toTitleCase, truncate } from "@/lib/utils"
 import { useDebounce } from "@/hooks/use-debounce"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -31,12 +31,12 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { Slider } from "@/components/ui/slider"
+import { ProductCard } from "@/components/cards/product-card"
 import { Icons } from "@/components/icons"
 import { MultiSelect } from "@/components/multi-select"
 import { PaginationButton } from "@/components/pagers/pagination-button"
-import { ProductCard } from "@/components/product-card"
 
-interface ProductsProps {
+interface ProductsProps extends React.HTMLAttributes<HTMLDivElement> {
   products: Product[]
   pageCount: number
   category?: Product["category"]
@@ -52,6 +52,7 @@ export function Products({
   categories,
   stores,
   storePageCount,
+  ...props
 }: ProductsProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -93,7 +94,10 @@ export function Products({
       router.push(
         `${pathname}?${createQueryString({
           price_range: `${min}-${max}`,
-        })}`
+        })}`,
+        {
+          scroll: false,
+        }
       )
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -112,7 +116,10 @@ export function Products({
             ? // Join categories with a dot to make search params prettier
               selectedCategories.map((c) => c.value).join(".")
             : null,
-        })}`
+        })}`,
+        {
+          scroll: false,
+        }
       )
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -131,7 +138,10 @@ export function Products({
           subcategories: selectedSubcategories?.length
             ? selectedSubcategories.map((s) => s.value).join(".")
             : null,
-        })}`
+        })}`,
+        {
+          scroll: false,
+        }
       )
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -147,14 +157,17 @@ export function Products({
       router.push(
         `${pathname}?${createQueryString({
           store_ids: storeIds?.length ? storeIds.join(".") : null,
-        })}`
+        })}`,
+        {
+          scroll: false,
+        }
       )
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeIds])
 
   return (
-    <div className="flex flex-col space-y-6">
+    <section className="flex flex-col space-y-6" {...props}>
       <div className="flex items-center space-x-2">
         <Sheet>
           <SheetTrigger asChild>
@@ -179,9 +192,9 @@ export function Products({
                   max={500}
                   step={1}
                   value={priceRange}
-                  onValueChange={(value: typeof priceRange) => {
+                  onValueChange={(value: typeof priceRange) =>
                     setPriceRange(value)
-                  }}
+                  }
                 />
                 <div className="flex items-center space-x-4">
                   <Input
@@ -291,7 +304,7 @@ export function Products({
                       </Button>
                     </div>
                   </div>
-                  <ScrollArea className="h-96">
+                  <ScrollArea className="h-[calc(100%-10rem)]">
                     <div className="space-y-4">
                       {stores.map((store) => (
                         <div
@@ -314,9 +327,9 @@ export function Products({
                           />
                           <Label
                             htmlFor={`store-${store.id}`}
-                            className="line-clamp-1 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                           >
-                            {store.name}
+                            {truncate(store.name, 20)}
                           </Label>
                         </div>
                       ))}
@@ -376,7 +389,10 @@ export function Products({
                     router.push(
                       `${pathname}?${createQueryString({
                         sort: option.value,
-                      })}`
+                      })}`,
+                      {
+                        scroll: false,
+                      }
                     )
                   })
                 }}
@@ -413,6 +429,6 @@ export function Products({
           startTransition={startTransition}
         />
       ) : null}
-    </div>
+    </section>
   )
 }

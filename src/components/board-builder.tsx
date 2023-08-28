@@ -29,12 +29,12 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { Slider } from "@/components/ui/slider"
+import { ProductCard } from "@/components/cards/product-card"
 import { Icons } from "@/components/icons"
 import { PaginationButton } from "@/components/pagers/pagination-button"
-import { ProductCard } from "@/components/product-card"
 import { addToCartAction, deleteCartItemAction } from "@/app/_actions/cart"
 
-interface BoardBuilderProps {
+interface BoardBuilderProps extends React.HTMLAttributes<HTMLDivElement> {
   products: Product[]
   pageCount: number
   subcategory: string | null
@@ -46,6 +46,7 @@ export function BoardBuilder({
   pageCount,
   subcategory,
   cartItems,
+  ...props
 }: BoardBuilderProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -98,7 +99,7 @@ export function BoardBuilder({
         if (!cartItems.map((item) => item.productId).includes(product.id)) {
           // Only allow one product per subcategory in cart
           const productIdWithSameSubcategory = cartItems.find(
-            (item) => item.productSubcategory === product.subcategory
+            (item) => item.subcategory === product.subcategory
           )?.productId
 
           if (productIdWithSameSubcategory) {
@@ -110,7 +111,7 @@ export function BoardBuilder({
           await addToCartAction({
             productId: product.id,
             quantity: 1,
-            productSubcategory: product.subcategory ?? subcategory,
+            subcategory: product.subcategory ?? subcategory,
           })
 
           toast.success("Added to cart.")
@@ -131,7 +132,7 @@ export function BoardBuilder({
   )
 
   return (
-    <div className="flex flex-col space-y-6">
+    <section className="flex flex-col space-y-6" {...props}>
       <div className="flex items-center space-x-2">
         <Sheet>
           <SheetTrigger asChild>
@@ -279,6 +280,6 @@ export function BoardBuilder({
           startTransition={startTransition}
         />
       ) : null}
-    </div>
+    </section>
   )
 }

@@ -15,7 +15,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CartSheet } from "@/components/cart/cart-sheet"
+import { CartSheet } from "@/components/checkout/cart-sheet"
 import { Combobox } from "@/components/combobox"
 import { Icons } from "@/components/icons"
 import { MainNav } from "@/components/layouts/main-nav"
@@ -119,15 +119,14 @@ export function SiteHeader({ user }: SiteHeaderProps) {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Link href="/signin">
-                <div
-                  className={buttonVariants({
-                    size: "sm",
-                  })}
-                >
-                  Sign In
-                  <span className="sr-only">Sign In</span>
-                </div>
+              <Link
+                href="/signin"
+                className={buttonVariants({
+                  size: "sm",
+                })}
+              >
+                Sign In
+                <span className="sr-only">Sign In</span>
               </Link>
             )}
           </nav>

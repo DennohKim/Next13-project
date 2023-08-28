@@ -33,7 +33,7 @@ export function SiteFooter() {
           <section
             id="footer-links"
             aria-labelledby="footer-links-heading"
-            className="grid flex-1 grid-cols-1 gap-10 xs:grid-cols-2 sm:grid-cols-4"
+            className="xxs:grid-cols-2 grid flex-1 grid-cols-1 gap-10 sm:grid-cols-4"
           >
             {siteConfig.footerNav.map((item) => (
               <div key={item.title} className="space-y-3">
@@ -90,18 +90,15 @@ export function SiteFooter() {
               href={siteConfig.links.github}
               target="_blank"
               rel="noreferrer"
+              className={cn(
+                buttonVariants({
+                  size: "icon",
+                  variant: "ghost",
+                })
+              )}
             >
-              <div
-                className={cn(
-                  buttonVariants({
-                    size: "icon",
-                    variant: "ghost",
-                  })
-                )}
-              >
-                <Icons.gitHub className="h-4 w-4" aria-hidden="true" />
-                <span className="sr-only">GitHub</span>
-              </div>
+              <Icons.gitHub className="h-4 w-4" aria-hidden="true" />
+              <span className="sr-only">GitHub</span>
             </Link>
             <ThemeToggle />
           </div>

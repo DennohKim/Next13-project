@@ -2,14 +2,15 @@ import { type Metadata } from "next"
 import { products } from "@/db/schema"
 import { env } from "@/env.mjs"
 
-import { Header } from "@/components/header"
+import {
+  PageHeader,
+  PageHeaderDescription,
+  PageHeaderHeading,
+} from "@/components/page-header"
 import { Products } from "@/components/products"
 import { Shell } from "@/components/shells/shell"
 import { getProductsAction } from "@/app/_actions/product"
 import { getStoresAction } from "@/app/_actions/store"
-
-// Running out of edge function execution units on vercel free plan
-// export const runtime = "edge"
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
@@ -35,7 +36,7 @@ export default async function ProductsPage({
     price_range,
     store_ids,
     store_page,
-  } = searchParams
+  } = searchParams ?? {}
 
   // Products transaction
   const limit = typeof per_page === "string" ? parseInt(per_page) : 8
@@ -70,12 +71,18 @@ export default async function ProductsPage({
 
   return (
     <Shell>
-      <Header
-        title="Products"
-        description="Buy products from our stores"
-        size="sm"
-      />
+      <PageHeader
+        id="products-page-header"
+        aria-labelledby="products-page-header-heading"
+      >
+        <PageHeaderHeading size="sm">Products</PageHeaderHeading>
+        <PageHeaderDescription size="sm">
+          Buy products from our stores
+        </PageHeaderDescription>
+      </PageHeader>
       <Products
+        id="products-page-products"
+        aria-labelledby="products-page-products-heading"
         products={productsTransaction.items}
         pageCount={pageCount}
         categories={Object.values(products.category.enumValues)}

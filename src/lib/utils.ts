@@ -1,4 +1,5 @@
 import { env } from "@/env.mjs"
+import type { CartLineItem } from "@/types"
 import { isClerkAPIResponseError } from "@clerk/nextjs"
 import { clsx, type ClassValue } from "clsx"
 import dayjs from "dayjs"
@@ -22,7 +23,7 @@ export function formatPrice(
   }).format(Number(price))
 }
 
-export function formatDate(date: Date | string) {
+export function formatDate(date: Date | string | number) {
   return dayjs(date).format("MMMM D, YYYY")
 }
 
@@ -104,5 +105,27 @@ export function catchClerkError(err: unknown) {
     return toast.error(err.errors[0]?.longMessage ?? unknownErr)
   } else {
     return toast.error(unknownErr)
+  }
+}
+
+export function isMacOs() {
+  if (typeof window === "undefined") return false
+
+  return window.navigator.userAgent.includes("Mac")
+}
+
+// Original source: https://github.com/jackblatch/OneStopShop/blob/main/server-actions/stripe/payment.ts
+export function calculateOrderAmount(items: CartLineItem[]) {
+  const total = items.reduce((acc, item) => {
+    return acc + Number(item.price) * item.quantity
+  }, 0)
+  const fee = Math.round(total * 0.1)
+
+  const totalInCents = Math.round(total * 100)
+  const feeInCents = Math.round(fee * 100)
+
+  return {
+    total: totalInCents, // Converts to cents which stripe charges in
+    fee: feeInCents,
   }
 }

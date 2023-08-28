@@ -8,8 +8,12 @@ import dayjs from "dayjs"
 import { formatDate } from "@/lib/utils"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Separator } from "@/components/ui/separator"
-import { Header } from "@/components/header"
 import { Icons } from "@/components/icons"
+import {
+  PageHeader,
+  PageHeaderDescription,
+  PageHeaderHeading,
+} from "@/components/page-header"
 import { Shell } from "@/components/shells/shell"
 
 export const metadata: Metadata = {
@@ -25,12 +29,18 @@ export default function BlogPage() {
 
   return (
     <Shell className="md:pb-10">
-      <Header
-        title="Blog"
-        description="Explore the latest news and updates from the community"
-      />
+      <PageHeader id="blog-header" aria-labelledby="blog-header-heading">
+        <PageHeaderHeading>Blog</PageHeaderHeading>
+        <PageHeaderDescription>
+          Explore the latest news and updates from the community
+        </PageHeaderDescription>
+      </PageHeader>
       <Separator className="mb-2.5" />
-      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+      <section
+        id="blog-posts"
+        aria-labelledby="blog-posts-heading"
+        className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+      >
         {posts.map((post, i) => (
           <Link key={post.slug} href={post.slug}>
             <article className="flex flex-col space-y-2.5">
@@ -72,7 +82,7 @@ export default function BlogPage() {
             </article>
           </Link>
         ))}
-      </div>
+      </section>
     </Shell>
   )
 }

@@ -3,44 +3,56 @@
 import { revalidatePath } from "next/cache"
 import { db } from "@/db"
 import { products, stores, type Store } from "@/db/schema"
-import { and, asc, desc, eq, gt, lt, sql } from "drizzle-orm"
+import { and, asc, desc, eq, gt, isNull, lt, not, sql } from "drizzle-orm"
 import { type z } from "zod"
 
 import { slugify } from "@/lib/utils"
-import type { getStoreSchema, storeSchema } from "@/lib/validations/store"
+import type {
+  getStoreSchema,
+  getStoresSchema,
+  storeSchema,
+} from "@/lib/validations/store"
 
-export async function getStoresAction(input: {
-  limit?: number
-  offset?: number
-  sort?: `${keyof Store | "productCount"}.${"asc" | "desc"}`
-  userId?: string
-}) {
+export async function getStoresAction(input: z.infer<typeof getStoresSchema>) {
   const limit = input.limit ?? 10
   const offset = input.offset ?? 0
   const [column, order] =
-    (input.sort?.split("-") as [
+    (input.sort?.split(".") as [
       keyof Store | undefined,
-      "asc" | "desc" | undefined
+      "asc" | "desc" | undefined,
     ]) ?? []
+  const statuses = input.statuses?.split(".") ?? []
 
   const { items, total } = await db.transaction(async (tx) => {
     const items = await tx
       .select({
         id: stores.id,
         name: stores.name,
-        productCount: sql<number>`count(${products.id})`,
+        description: stores.description,
+        stripeAccountId: stores.stripeAccountId,
       })
       .from(stores)
       .limit(limit)
       .offset(offset)
       .leftJoin(products, eq(stores.id, products.storeId))
-      .where(input.userId ? eq(stores.userId, input.userId) : undefined)
+      .where(
+        and(
+          input.userId ? eq(stores.userId, input.userId) : undefined,
+          statuses.includes("active") && !statuses.includes("inactive")
+            ? not(isNull(stores.stripeAccountId))
+            : undefined,
+          statuses.includes("inactive") && !statuses.includes("active")
+            ? isNull(stores.stripeAccountId)
+            : undefined
+        )
+      )
       .groupBy(stores.id)
       .orderBy(
+        desc(stores.stripeAccountId),
         input.sort === "productCount.asc"
-          ? asc(sql<number>`count(${products.id})`)
+          ? asc(sql<number>`count(*)`)
           : input.sort === "productCount.desc"
-          ? desc(sql<number>`count(${products.id})`)
+          ? desc(sql<number>`count(*)`)
           : column && column in stores
           ? order === "asc"
             ? asc(stores[column])
@@ -50,9 +62,10 @@ export async function getStoresAction(input: {
 
     const total = await tx
       .select({
-        count: sql<number>`count(${stores.id})`,
+        count: sql<number>`count(*)`,
       })
       .from(stores)
+      .where(input.userId ? eq(stores.userId, input.userId) : undefined)
 
     return {
       items,
@@ -95,12 +108,18 @@ export async function getNextStoreIdAction(
   }
 
   const nextStore = await db.query.stores.findFirst({
+    columns: {
+      id: true,
+    },
     where: and(eq(stores.userId, input.userId), gt(stores.id, input.id)),
     orderBy: asc(stores.id),
   })
 
   if (!nextStore) {
     const firstStore = await db.query.stores.findFirst({
+      columns: {
+        id: true,
+      },
       where: eq(stores.userId, input.userId),
       orderBy: asc(stores.id),
     })
@@ -123,12 +142,18 @@ export async function getPreviousStoreIdAction(
   }
 
   const previousStore = await db.query.stores.findFirst({
+    columns: {
+      id: true,
+    },
     where: and(eq(stores.userId, input.userId), lt(stores.id, input.id)),
     orderBy: desc(stores.id),
   })
 
   if (!previousStore) {
     const lastStore = await db.query.stores.findFirst({
+      columns: {
+        id: true,
+      },
       where: eq(stores.userId, input.userId),
       orderBy: desc(stores.id),
     })

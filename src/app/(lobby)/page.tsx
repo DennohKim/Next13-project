@@ -3,7 +3,7 @@ import Link from "next/link"
 import { db } from "@/db"
 import { products, stores } from "@/db/schema"
 import { desc, eq, sql } from "drizzle-orm"
-import Balance from "react-wrap-balancer"
+import { Balancer } from "react-wrap-balancer"
 
 import { productCategories } from "@/config/products"
 import { siteConfig } from "@/config/site"
@@ -11,43 +11,41 @@ import { cn } from "@/lib/utils"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { ProductCard } from "@/components/cards/product-card"
+import { StoreCard } from "@/components/cards/store-card"
 import { Icons } from "@/components/icons"
-import { ProductCard } from "@/components/product-card"
 import { Shell } from "@/components/shells/shell"
 
-// Running out of edge function execution units on vercel free plan
-// export const runtime = "edge"
-
-// This is equivalent to getServersideProps() in the pages directory
-// Read more: https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config
 export const dynamic = "force-dynamic"
 
 export default async function IndexPage() {
-  const allProducts = await db
-    .select()
+  const someProducts = await db
+    .select({
+      id: products.id,
+      name: products.name,
+      images: products.images,
+      category: products.category,
+      price: products.price,
+      stripeAccountId: stores.stripeAccountId,
+    })
     .from(products)
     .limit(8)
-    .orderBy(desc(products.createdAt))
+    .leftJoin(stores, eq(products.storeId, stores.id))
+    .groupBy(products.id)
+    .orderBy(desc(stores.stripeAccountId), desc(products.createdAt))
 
-  const allStoresWithProductCount = await db
+  const someStores = await db
     .select({
       id: stores.id,
       name: stores.name,
       description: stores.description,
-      productCount: sql<number>`count(${products.id})`,
+      stripeAccountId: stores.stripeAccountId,
     })
     .from(stores)
     .limit(4)
     .leftJoin(products, eq(products.storeId, stores.id))
     .groupBy(stores.id)
-    .orderBy(desc(sql<number>`count(${products.id})`))
+    .orderBy(desc(stores.stripeAccountId), desc(sql<number>`count(*)`))
 
   async function getGithubStars(): Promise<number | null> {
     try {
@@ -70,7 +68,8 @@ export default async function IndexPage() {
       const data = (await response.json()) as { stargazers_count: number }
 
       return data.stargazers_count
-    } catch (error) {
+    } catch (err) {
+      console.error(err)
       return null
     }
   }
@@ -78,7 +77,7 @@ export default async function IndexPage() {
   const githubStars = await getGithubStars()
 
   return (
-    <Shell as="div" className="gap-12">
+    <Shell className="gap-12">
       <section
         id="hero"
         aria-labelledby="hero-heading"
@@ -96,19 +95,12 @@ export default async function IndexPage() {
         <h1 className="text-3xl font-bold leading-tight tracking-tighter md:text-5xl lg:text-6xl lg:leading-[1.1]">
           An e-commerce skateshop built with everything new in Next.js 13
         </h1>
-        <Balance className="max-w-[46rem] text-lg text-muted-foreground sm:text-xl">
+        <Balancer className="max-w-[46rem] text-lg text-muted-foreground sm:text-xl">
           Buy and sell skateboarding products from independent brands and stores
           around the world
-        </Balance>
+        </Balancer>
         <div className="flex flex-wrap items-center justify-center gap-4">
-          <Link
-            href="/products"
-            className={cn(
-              buttonVariants({
-                size: "lg",
-              })
-            )}
-          >
+          <Link href="/products" className={cn(buttonVariants())}>
             Buy Now
           </Link>
           <Link
@@ -116,7 +108,6 @@ export default async function IndexPage() {
             className={cn(
               buttonVariants({
                 variant: "outline",
-                size: "lg",
               })
             )}
           >
@@ -133,9 +124,9 @@ export default async function IndexPage() {
           <h2 className="text-3xl font-bold leading-[1.1] sm:text-3xl md:text-5xl">
             Categories
           </h2>
-          <Balance className="max-w-[46rem] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
+          <Balancer className="max-w-[46rem] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
             Explore our categories and find the best products for you
-          </Balance>
+          </Balancer>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {productCategories.map((category) => (
@@ -171,9 +162,9 @@ export default async function IndexPage() {
         aria-labelledby="create-a-store-banner-heading"
         className="grid place-items-center gap-6 rounded-lg border bg-card px-6 py-16 text-center text-card-foreground shadow-sm"
       >
-        <h2 className="text-2xl font-medium sm:text-3xl">
+        <div className="text-2xl font-medium sm:text-3xl">
           Do you want to sell your products on our website?
-        </h2>
+        </div>
         <Link href="/dashboard/stores">
           <div className={cn(buttonVariants())}>
             Create a store
@@ -190,7 +181,7 @@ export default async function IndexPage() {
           <h2 className="flex-1 text-2xl font-medium sm:text-3xl">
             Featured products
           </h2>
-          <Link href="/products">
+          <Link aria-label="Products" href="/products">
             <div
               className={cn(
                 buttonVariants({
@@ -199,12 +190,11 @@ export default async function IndexPage() {
               )}
             >
               View all
-              <span className="sr-only">View all products</span>
             </div>
           </Link>
         </div>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {allProducts.map((product) => (
+          {someProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
@@ -214,32 +204,29 @@ export default async function IndexPage() {
         aria-labelledby="featured-stores-heading"
         className="space-y-6"
       >
-        <h2 className="text-2xl font-medium sm:text-3xl">Featured stores</h2>
+        <div className="flex items-center">
+          <h2 className="flex-1 text-2xl font-medium sm:text-3xl">
+            Featured stores
+          </h2>
+          <Link aria-label="Stores" href="/stores">
+            <div
+              className={cn(
+                buttonVariants({
+                  size: "sm",
+                })
+              )}
+            >
+              View all
+            </div>
+          </Link>
+        </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {allStoresWithProductCount.map((store) => (
-            <Card key={store.id} className="flex h-full flex-col">
-              <CardHeader className="flex-1">
-                <CardTitle className="line-clamp-1">{store.name}</CardTitle>
-                <CardDescription className="line-clamp-2">
-                  {store.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Link href={`/products?store_ids=${store.id}`}>
-                  <div
-                    className={cn(
-                      buttonVariants({
-                        size: "sm",
-                        className: "h-8 w-full",
-                      })
-                    )}
-                  >
-                    View products ({store.productCount})
-                    <span className="sr-only">{`${store.name} store products`}</span>
-                  </div>
-                </Link>
-              </CardContent>
-            </Card>
+          {someStores.map((store) => (
+            <StoreCard
+              key={store.id}
+              store={store}
+              href={`/products?store_ids=${store.id}`}
+            />
           ))}
         </div>
       </section>

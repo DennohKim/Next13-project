@@ -29,7 +29,7 @@ export default async function ProductsPage({
 }: ProductsPageProps) {
   const storeId = Number(params.storeId)
 
-  const { page, per_page, sort, name, category } = searchParams
+  const { page, per_page, sort, name, category } = searchParams ?? {}
 
   const store = await db.query.stores.findFirst({
     where: eq(stores.id, storeId),
@@ -57,7 +57,7 @@ export default async function ProductsPage({
     typeof sort === "string"
       ? (sort.split(".") as [
           keyof Product | undefined,
-          "asc" | "desc" | undefined
+          "asc" | "desc" | undefined,
         ])
       : []
 
@@ -67,8 +67,8 @@ export default async function ProductsPage({
       : []
 
   // Transaction is used to ensure both queries are executed in a single transaction
-  const { storeProducts, totalProducts } = await db.transaction(async (tx) => {
-    const storeProducts = await tx
+  const { items, total } = await db.transaction(async (tx) => {
+    const items = await tx
       .select()
       .from(products)
       .limit(limit)
@@ -94,7 +94,7 @@ export default async function ProductsPage({
           : desc(products.createdAt)
       )
 
-    const totalProducts = await tx
+    const total = await tx
       .select({
         count: sql<number>`count(${products.id})`,
       })
@@ -110,20 +110,21 @@ export default async function ProductsPage({
             : undefined
         )
       )
+      .then((res) => res[0]?.count ?? 0)
 
     return {
-      storeProducts,
-      totalProducts: Number(totalProducts[0]?.count) ?? 0,
+      items,
+      total,
     }
   })
 
-  const pageCount = Math.ceil(totalProducts / limit)
+  const pageCount = Math.ceil(total / limit)
 
   return (
     <div className="space-y-2.5">
       {env.NODE_ENV !== "production" && <GenerateButton storeId={storeId} />}
       <ProductsTableShell
-        data={storeProducts}
+        data={items}
         pageCount={pageCount}
         storeId={storeId}
       />

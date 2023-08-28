@@ -11,7 +11,11 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { AddStoreForm } from "@/components/forms/add-store-form"
-import { Header } from "@/components/header"
+import {
+  PageHeader,
+  PageHeaderDescription,
+  PageHeaderHeading,
+} from "@/components/page-header"
 import { Shell } from "@/components/shells/shell"
 
 export const metadata: Metadata = {
@@ -29,12 +33,20 @@ export default async function NewStorePage() {
 
   return (
     <Shell variant="sidebar">
-      <Header
-        title="New Store"
-        description="New store for your account."
-        size="sm"
-      />
-      <Card>
+      <PageHeader
+        id="new-store-page-header"
+        aria-labelledby="new-store-page-header-heading"
+      >
+        <PageHeaderHeading size="sm">New Store</PageHeaderHeading>
+        <PageHeaderDescription size="sm">
+          Add a new store to your account
+        </PageHeaderDescription>
+      </PageHeader>
+      <Card
+        as="section"
+        id="new-store-page-form-container"
+        aria-labelledby="new-store-page-form-heading"
+      >
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl">Add store</CardTitle>
           <CardDescription>Add a new store to your account</CardDescription>

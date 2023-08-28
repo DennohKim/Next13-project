@@ -1,12 +1,25 @@
 import { Skeleton } from "@/components/ui/skeleton"
-import { Header } from "@/components/header"
+import {
+  PageHeader,
+  PageHeaderDescription,
+  PageHeaderHeading,
+} from "@/components/page-header"
 import { Shell } from "@/components/shells/shell"
 
 export default function AccountLoading() {
   return (
     <Shell variant="sidebar">
-      <Header title="Stores" description="Manage your stores." size="sm" />
-      <div className="grid gap-10 rounded-lg border p-4">
+      <PageHeader id="account-header" aria-labelledby="account-header-heading">
+        <PageHeaderHeading size="sm">Account</PageHeaderHeading>
+        <PageHeaderDescription size="sm">
+          Manage your account settings
+        </PageHeaderDescription>
+      </PageHeader>
+      <section
+        id="user-account-info"
+        aria-labelledby="user-account-info-heading"
+        className="grid gap-10 rounded-lg border p-4"
+      >
         <div className="space-y-2">
           <Skeleton className="h-5 w-20" />
           <Skeleton className="h-4 w-72" />
@@ -26,7 +39,7 @@ export default function AccountLoading() {
           <Skeleton className="h-8 w-52" />
           <Skeleton className="h-8 w-52" />
         </div>
-      </div>
+      </section>
     </Shell>
   )
 }

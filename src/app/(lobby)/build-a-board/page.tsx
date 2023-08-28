@@ -6,8 +6,12 @@ import { env } from "@/env.mjs"
 import { productCategories } from "@/config/products"
 import { cn } from "@/lib/utils"
 import { BoardBuilder } from "@/components/board-builder"
-import { Header } from "@/components/header"
 import { Icons } from "@/components/icons"
+import {
+  PageHeader,
+  PageHeaderDescription,
+  PageHeaderHeading,
+} from "@/components/page-header"
 import { Shell } from "@/components/shells/shell"
 import { getCartItemsAction } from "@/app/_actions/cart"
 import { getProductsAction } from "@/app/_actions/product"
@@ -52,12 +56,20 @@ export default async function BuildABoardPage({
 
   return (
     <Shell className="gap-4">
-      <Header
-        title="Build a Board"
-        description="Select the components for your board"
-        size="sm"
-      />
-      <div className="sticky top-14 z-30 w-full shrink-0 overflow-hidden bg-background/80 pb-4 pt-6 shadow-md sm:backdrop-blur-md">
+      <PageHeader
+        id="build-a-board-header"
+        aria-labelledby="build-a-board-header-heading"
+      >
+        <PageHeaderHeading size="sm">Build a Board</PageHeaderHeading>
+        <PageHeaderDescription size="sm">
+          Select the components for your board
+        </PageHeaderDescription>
+      </PageHeader>
+      <section
+        id="build-a-board-categories"
+        aria-labelledby="build-a-board-categories-heading"
+        className="sticky top-14 z-30 w-full shrink-0 overflow-hidden bg-background/80 pb-4 pt-6 shadow-md sm:backdrop-blur-md"
+      >
         <div className="grid place-items-center overflow-x-auto">
           <div className="inline-flex w-fit items-center rounded border bg-background p-1 text-muted-foreground shadow-2xl">
             {productCategories[0]?.subcategories.map((subcategory) => (
@@ -74,7 +86,7 @@ export default async function BuildABoardPage({
                   )}
                 >
                   {cartItems
-                    ?.map((item) => item.productSubcategory)
+                    ?.map((item) => item.subcategory)
                     ?.includes(subcategory.slug) ? (
                     <Icons.check className="mr-2 h-4 w-4" aria-hidden="true" />
                   ) : (
@@ -86,8 +98,10 @@ export default async function BuildABoardPage({
             ))}
           </div>
         </div>
-      </div>
+      </section>
       <BoardBuilder
+        id="build-a-board-products"
+        aria-labelledby="build-a-board-products-heading"
         products={productsTransaction.items}
         pageCount={pageCount}
         subcategory={activeSubcategory}
